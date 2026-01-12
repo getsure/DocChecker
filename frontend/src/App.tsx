@@ -8,55 +8,105 @@ const App = () => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      console.log('Selected file:', e.target.files[0]);
       setImage(e.target.files[0]);
+      setResult('');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!image) return;
+
     setLoading(true);
     const formData = new FormData();
     formData.append('image', image);
-    console.log('formData:', formData);
 
     try {
       const response = await axios.post('/api/image/validate', formData);
-      console.log(response.data)
       const { result: res, blurPercentage } = response.data;
-      setResult(`${res} - ${blurPercentage === 0 ? '100% clear' : blurPercentage + '% blur'}`);
+
+      setResult(
+        `${res} • ${
+          blurPercentage === 0 ? '100% Clear Image' : `${blurPercentage}% Blur Detected`
+        }`
+      );
     } catch (error) {
       console.error(error);
-      setResult('Error validating image');
+      setResult('❌ Error validating image');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h2>Agentic AI Doc Checker</h2><hr/>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Upload from device:</label>
-          <input type="file" accept="image/*" onChange={handleImageChange} />
-        </div>
-        {/* <div>
-          <label>Capture from camera:</label>
-          <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} />
-        </div> */}
-        {image && (
-          <div>
-            <h3>Preview:</h3>
-            <img src={URL.createObjectURL(image)} alt="preview" style={{ width: '300px', height: '200px', objectFit: 'cover' }} />
+    <div className="container py-5">
+      <div className="row justify-content-center">
+        <div className="col-md-8 col-lg-6">
+          <div className="card shadow-sm">
+            <div className="card-body">
+              <h3 className="card-title text-center mb-4">
+                Agentic AI Document Checker
+              </h3>
+
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">
+                    Upload Image
+                  </label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                </div>
+
+                {image && (
+                  <div className="mb-3 text-center">
+                    <p className="fw-semibold mb-2">Preview</p>
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt="preview"
+                      className="img-fluid rounded border"
+                      style={{ maxHeight: '250px', objectFit: 'cover' }}
+                    />
+                  </div>
+                )}
+
+                <div className="d-grid">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                        />
+                        Processing...
+                      </>
+                    ) : (
+                      'Validate Image'
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {result && (
+                <div className="alert alert-info mt-4 text-center">
+                  <strong>Result:</strong> {result}
+                </div>
+              )}
+            </div>
           </div>
-        )}
-        <button type="submit" disabled={loading}>
-          {loading ? 'Processing...' : 'Submit'}
-        </button>
-      </form>
-      {result && <h2>Result: {result}</h2>}
+
+          <p className="text-center text-muted mt-3 small">
+            Supported formats: JPG, PNG • Max clarity recommended
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
